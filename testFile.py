@@ -16,7 +16,6 @@ training_data = []
 not_waldo = []
 waldo = []
 def create_train():
-	counter = 0
 	for category in CATEGORIES:
 		path = os.path.join(DATADIR, category) #Path to waldo or not waldo
 		class_num = CATEGORIES.index(category)
@@ -32,14 +31,13 @@ def create_train():
 				waldo.append([img_array, class_num])
 				training_data.append([img_array, class_num])
 			elif class_num == 1:
-				counter += 1
 				not_waldo.append([img_array, class_num])
-				if counter < 39:
-					training_data.append([img_array, class_num])
+				training_data.append([img_array, class_num])
 
 create_train()
 
 random.shuffle(training_data)
+
 X_train = []
 y_train = []
 
@@ -49,18 +47,20 @@ for features, label in training_data:
 
 X = np.array(X_train).reshape(-1, 64, 64, 1)
 X = X.astype('float32') / 255
-Y = np.asarray(y_train).astype('float32')/255
-
+Y = np.asarray(y_train)
 Y = to_categorical(Y)
-
 
 model = Sequential()
 
-model.add(Conv2D(12, kernel_size=3, activation='relu', input_shape=(64,64,1)))
+model.add(Conv2D(12, kernel_size=3, activation='relu', input_shape = (64,64,1)))
 model.add(Conv2D(6, kernel_size=3, activation='relu'))
 model.add(Flatten())
-model.add(Dense(1, activation='sigmoid'))
+model.add(Dense(2, activation='softmax'))
 
 
-model.compile(optimizer='adam', loss='binary_crossentropy', metrics=['accuracy'])
+model.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy'])
+model.fit(X, Y, validation_data=(X, Y), epochs=3, batch_size = 128)
 
+predicted_classes = model.predict_classes(X)
+print(predicted_classes)
+print(Y)
