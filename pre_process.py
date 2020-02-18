@@ -30,51 +30,66 @@ create_train()
 
 crop_img_arr = []
 
-for i in range(0,28):
-	img_string = df["image"][i]
+print("Starting")
+for shiftx in range(8):
+	print("Loop {0}".format(shiftx))
+	for shifty in range(8): 
+		for i in range(0,28): #Will generate 8 * 8 * 28 images (1729 images) and save them to crop_img_arr
+			img_string = df["image"][i]
 
-	num = int(''.join([i for i in img_string if i in "0123456789"]))
+			num = int(''.join([i for i in img_string if i in "0123456789"]))
 
-	img_size = 256
-	x2 = data["x2"][i]
-	x1 = data["x1"][i]
-	y2 = data["y2"][i]
-	y1 = data["y1"][i]
-
-
-	deltax = (img_size - (x2 - x1)) / 2
-	deltay = (img_size - (y2 - y1)) / 2
+			img_size = 64
+			x2 = data["x2"][i]
+			x1 = data["x1"][i]
+			y2 = data["y2"][i]
+			y1 = data["y1"][i]
 
 
-	if deltax.is_integer():
-		x2 = x2 + deltax
-		x1 = x1 - deltax
-	else:
-		x1 = x1 - int(deltax)
-		x2 = x2 + round(deltax)
+			deltax = (img_size - (x2 - x1)) / 2.0
+			deltay = (img_size - (y2 - y1)) / 2.0
 
-	if deltay.is_integer():
-		y2 = y2 + deltay
-		y1 = y1 - deltay
-	else:
-		y1 = y1 - int(deltay)
-		y2 = y2 + round(deltay)
 
-	x1, y1, x2, y2 = int(x1), int(y1), int(x2), int(y2)
+			if deltax.is_integer():
+				x2 = x2 + deltax
+				x1 = x1 - deltax
 
-	try:
-		img_copy = myarr[num - 1].copy()
-		img_copy = np.fliplr(img_copy.reshape(-1,3)).reshape(img_copy.shape)
-		img_copy = img_copy[y1:y2, x1:x2]
-		crop_img_arr.append(img_copy)
-		print("Saving cropped image {0} to array. Dimensions are {1} by {2}.".format(num, (x2 - x1), (y2 - y1)))
-	except:
-		pass
+			else:
+				x1 = x1 - int(deltax)
+				x2 = x2 + round(deltax)
+
+			if deltay.is_integer():
+				y2 = y2 + deltay
+				y1 = y1 - deltay
+
+			else:
+				y1 = y1 - int(deltay)
+				y2 = y2 + round(deltay)
+
+
+			x1, y1, x2, y2 = int(x1), int(y1), int(x2), int(y2)
+
+			x1 += (x2 - x1) - img_size
+			y1 += (y2 - y1) - img_size
+
+			x1 += shiftx * 3
+			x2 += shiftx * 3
+
+			y1 += shifty * 3
+			y2 += shifty * 3
+			try:
+				img_copy = myarr[num - 1].copy()
+				img_copy = np.fliplr(img_copy.reshape(-1,3)).reshape(img_copy.shape)
+				img_copy = img_copy[y1:y2, x1:x2]
+				crop_img_arr.append(img_copy)
+				#print("Saving cropped image {0} to array. Dimensions are {1} by {2}.".format(num, (x2 - x1), (y2 - y1)))
+			except:
+				pass
 
 print(len(crop_img_arr))
+
 	
 '''
-
 fig = plt.figure(figsize=(8, 8))
 columns = 9
 rows = 3
