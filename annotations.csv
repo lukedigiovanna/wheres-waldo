@@ -13,6 +13,7 @@ image,x1,y1,x2,y2,label
 ../images/7.jpg,817,951,852,999,waldo
 ../images/8.jpg,1166,291,1191,322,waldo
 ../images/9.jpg,231,735,261,769,waldo
+../images/16.jpg,556,0,1140,630,waldo
 ../images/20.jpg,290,1680,331,1731,waldo
 ../images/8.jpg,618,130,707,227,waldo
 ../images/10.jpg,428,83,483,145,waldo
@@ -26,3 +27,4 @@ image,x1,y1,x2,y2,label
 ../images/28.jpg,485,502,498,517,waldo
 ../images/29.jpg,930,594,948,617,waldo
 ../images/30.jpg,678,496,693,516,waldo
+

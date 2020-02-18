@@ -5,11 +5,9 @@ import cv2
 import pandas 
 import os
 df = pandas.read_csv('annotations.csv')
-pickle_in = open("original.pickle", "rb")
 
 data = df[["x1","y1","x2","y2"]]
 
-X = pickle.load(pickle_in)
 DATADIR = "/Users/joshleichty/Documents/"
 CATEGORIES = ['images']
 myarr = [0 for i in range(36)]
@@ -29,21 +27,25 @@ def create_train():
 				print("Placing image {0} in location {1}.".format(num, num-1))
 				myarr[num - 1] = img_array
 create_train()
-'''
 
-for i in range(0,38):
+crop_img_arr = []
+
+for i in range(0,28):
 	img_string = df["image"][i]
-	print(img_string)
-	num = int([i for i in img_string if i in "0123456789"][0])
 
-	img_size = 128
+	num = int(''.join([i for i in img_string if i in "0123456789"]))
+
+	img_size = 256
 	x2 = data["x2"][i]
 	x1 = data["x1"][i]
 	y2 = data["y2"][i]
 	y1 = data["y1"][i]
-	print(x1,y1,x2,y2)
+
+
 	deltax = (img_size - (x2 - x1)) / 2
 	deltay = (img_size - (y2 - y1)) / 2
+
+
 	if deltax.is_integer():
 		x2 = x2 + deltax
 		x1 = x1 - deltax
@@ -60,28 +62,24 @@ for i in range(0,38):
 
 	x1, y1, x2, y2 = int(x1), int(y1), int(x2), int(y2)
 
-	X[num] = np.fliplr(X[num].reshape(-1,3)).reshape(X[num].shape)
+	try:
+		img_copy = myarr[num - 1].copy()
+		img_copy = np.fliplr(img_copy.reshape(-1,3)).reshape(img_copy.shape)
+		img_copy = img_copy[y1:y2, x1:x2]
+		crop_img_arr.append(img_copy)
+		print("Saving cropped image {0} to array. Dimensions are {1} by {2}.".format(num, (x2 - x1), (y2 - y1)))
+	except:
+		pass
 
-	print("Showing image {0}".format(num))
-	plt.imshow(X[0])
-	plt.show()
-	exit()
-
-	X_copy = X[num].copy()
-	X[num] = X[num][y1:y2, x1:x2]
-
-	X[num] = np.fliplr(X[num].reshape(-1,3)).reshape(X[num].shape)
-	plt.imshow(X[num])
-	plt.show()
-	exit()
-	img_arr.append(X[-1 * i])
-
+print(len(crop_img_arr))
+	
+'''
 
 fig = plt.figure(figsize=(8, 8))
-columns = 6
-rows = 6
+columns = 9
+rows = 3
 for i in range(1, columns*rows + 1):
-    img = X[i - 1]
+    img = crop_img_arr[i - 1]
     fig.add_subplot(rows, columns, i)
     try:
     	plt.imshow(img)
