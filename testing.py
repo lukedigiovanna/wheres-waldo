@@ -10,68 +10,69 @@ import cv2
 import random
 import seaborn as sns
 from sklearn.metrics import plot_confusion_matrix
-import pandas as pd 
+import pandas as pd
 from keras.preprocessing.image import ImageDataGenerator
 import pickle
+from skimage import color
 
-DATADIR = "/Users/joshleichty/Documents/"
-CATEGORIES = ['images']
-training_data = []
-not_waldo = []
-waldo = []
-def create_train():
-	for category in CATEGORIES:
-		path = os.path.join(DATADIR, category) #Path to waldo or not waldo
-		class_num = CATEGORIES.index(category)
-		for img in os.listdir(path):
-			img_array = cv2.imread(os.path.join(path, img), cv2.COLOR_BGR2RGB) #Convert images to grayscale arr
+pickle_in = open("waldo.pickle","rb")
+waldo = pickle.load(pickle_in)
 
-			'''
-			If we want to resize
-			IMG_SIZE = new image size
-			new_array = cv2.resize(img_array, (IMG_SIZE, IMG_SIZE))
-			'''
-			if class_num == 0:
-				waldo.append(img_array)
-				training_data.append([img_array, class_num])
-			elif class_num == 1:
-				not_waldo.append(img_array)
-				training_data.append([img_array, class_num])
+pickle_in2 = open("notwaldo.pickle","rb")
+notwaldo = pickle.load(pickle_in2)
 
-create_train()
 
-waldo = np.asarray(waldo)
+notwaldo = notwaldo[0:len(waldo)] #limits the amount of notwaldos to be the same as the number of waldos so that the data is a 50/50 split of waldos and not waldos
 
-not_waldo = np.asarray(not_waldo[0:38])
+counter = 0
+for i in notwaldo:
+	if i[1] == 1:
+		counter += 1
+counter2 = 0
+for i in waldo:
+	if i[1] == 0:
+		counter2 += 1
 
-random.shuffle(training_data)
+
+data = np.concatenate((waldo, notwaldo),axis=0)
+print(len(data))
+
+
+print("Before")
+print(counter)
+print(counter2)
+
+print("")
 
 
 X_train = []
-y_train = []
+Y_train = []
+countone = 0
+countzero = 0
+for i in data:
+	if i[1] == 0:
+		countzero += 1
+	elif i[1] == 1:
+		countone += 1
+	X_train.append(i[0])
+	Y_train.append(i[1])
+print("After")
+print(countone)
+print(countzero)
+X_train = np.array(X_train)
 
+X_train = np.array(X_train).reshape(-1, 64, 64, 3)
+X_train = X_train.astype('float32') / 255 #normalize
+Y_train = np.asarray(Y_train)
 
+Y_copy = Y_train.copy()
+Y_train = to_categorical(Y_train)
 
-for features, label in training_data:
-	X_train.append(features)
-	y_train.append(label)
-
-pickle_out = open("original.pickle", "wb")
-pickle.dump(waldo, pickle_out)
-pickle_out.close()
-
-
-exit()
-X = np.array(X_train).reshape(-1, 64, 64, 1)
-X = X.astype('float32') / 255
-Y = np.asarray(y_train)
-Y_copy = Y.copy()
-Y = to_categorical(Y)
 
 model = Sequential()
 
 num_classes = 2
-input_shape = (64,64,1)
+input_shape = (64,64,3)
 model.add(Conv2D(32, kernel_size=(5, 5), strides=(1, 1),
                  activation='relu',
                  input_shape=input_shape))
@@ -82,14 +83,17 @@ model.add(Flatten())
 model.add(Dense(1000, activation='relu'))
 model.add(Dense(num_classes, activation='softmax'))
 
+print("created model")
 
 model.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy'])
-model.fit(X, Y, validation_data=(X, Y), epochs=1, batch_size = 128)
+model.fit(X_train, Y_train, validation_data=(X_train, Y_train), epochs=1, batch_size = 128)
 
-predicted_classes = model.predict_classes(X)
+print("ran model")
+
+predicted_classes = model.predict_classes(X_train)
 
 print(np.count_nonzero(predicted_classes - Y_copy))
 confusion_matrix = pd.crosstab(Y_copy, predicted_classes, rownames=['Actual'], colnames=['Predicted'])
-sns.heatmap(confusion_matrix, annot=True,fmt='.5g') 
+sns.heatmap(confusion_matrix, annot=True,fmt='.5g')
 
 plt.show()

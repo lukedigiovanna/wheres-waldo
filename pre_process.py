@@ -4,6 +4,9 @@ import numpy as np
 import cv2
 import pandas 
 import os
+from PIL import Image
+
+
 df = pandas.read_csv('annotations.csv')
 
 data = df[["x1","y1","x2","y2"]]
@@ -86,8 +89,17 @@ for shiftx in range(8):
 			except:
 				pass
 
-print(len(crop_img_arr))
 
+new_arr = []
+for i in range(len(crop_img_arr)):
+	if np.array(crop_img_arr[i]).shape == (64,64,3):
+		new_arr.append([crop_img_arr[i],0])
+		
+
+new_arr = np.array(new_arr)
+pickle_out = open("waldo.pickle","wb")
+pickle.dump(new_arr, pickle_out)
+pickle_out.close()
 	
 '''
 fig = plt.figure(figsize=(8, 8))
