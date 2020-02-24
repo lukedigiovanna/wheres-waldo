@@ -137,7 +137,7 @@ for index in sorted(indexes, reverse=True):
 
 
 datagen = ImageDataGenerator(
-        rotation_range=5,
+        rotation_range=5-,
         width_shift_range=0.2,
         height_shift_range=0.2,
         rescale=1./255,
