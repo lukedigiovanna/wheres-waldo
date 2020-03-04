@@ -41,11 +41,10 @@ pickle_in3 = open("notwaldo.pickle","rb")
 notwaldo = pickle.load(pickle_in3)
 
 oldwaldo = np.concatenate((oldwaldo, waldo[0:len(oldwaldo)]), axis = 0)
-notwaldo = notwaldo[0:len(oldwaldo)] 
+notwaldo = notwaldo[0:len(oldwaldo)]
 
-
-data = waldo + notwaldo
-data = np.concatenate((waldo, notwaldo),axis=0)
+#data = waldo + notwaldo
+data = np.concatenate((oldwaldo, notwaldo),axis=0)
 np.random.shuffle(data)
 
 X_train = []
@@ -54,15 +53,18 @@ for i in data:
 	if(i[1] == 1):
 		X_train.append(i[0][...,::-1])
 	else:
-		X_train.append(i[0]) 
-	Y_train.append(i[1])
+		X_train.append(i[0])
+	if (i[1] == 0):
+		Y_train.append(1)
+	else:
+		Y_train.append(0)
 
 
 X_train = np.array(X_train)
 
 
 X_train = np.array(X_train).reshape(-1, 64, 64, 3)
-X_train = X_train.astype('float32') / 255 
+X_train = X_train.astype('float32') / 255
 Y_train = np.asarray(Y_train)
 X = X_train
 Y = Y_train
@@ -71,12 +73,11 @@ Y = Y_train
 X_train, X_test, Y_train, Y_test = train_test_split(X, Y, test_size=0.25)
 
 Y_copy = Y_test.copy()
-Y_train = to_categorical(Y_train)
-Y_test = to_categorical(Y_test)
+
 
 model = Sequential()
 
-num_classes = 2
+num_classes = 1
 input_shape = (64,64,3)
 
 model = Sequential()
@@ -121,12 +122,12 @@ for i in range(3):
 
 # merge left and right branches outputs
 y = concatenate([x, y])
-# feature maps to vector before connecting to Dense 
+# feature maps to vector before connecting to Dense
 y = Flatten()(y)
 y = Dropout(dropout)(y)
-outputs = Dense(2, activation='softmax')(y)
+outputs = Dense(1, activation='sigmoid')(y)
 
-# build the model in functional API
+# build the modela in functional API
 model = Model([left_inputs, right_inputs], outputs)
 # verify the model using graph
 plot_model(model, to_file='cnn-y-network.png', show_shapes=True)
@@ -145,16 +146,34 @@ model_json = model.to_json()
 with open("model.json", "w") as json_file:
     json_file.write(model_json)
 
-model.fit([X_train, X_train], Y_train, validation_data=([X_test, X_test], Y_test), epochs=50, batch_size = 64, callbacks = [checkpoint] )
+print(Y_test)
+
+history = model.fit([X_train, X_train], Y_train, validation_data=([X_test, X_test], Y_test), epochs=12, batch_size = 64, callbacks = [checkpoint] )
+
+accuracy = history.history['accuracy']
+val_accuracy = history.history['val_accuracy']
+
+fig = plt.figure()
+ax = fig.add_axes([0.1,0.1,0.8,0.8])
+ax.plot(range(len(accuracy)), accuracy, color="black")
+ax.plot(range(len(val_accuracy)), val_accuracy, color="red")
+ax.set_xlabel("Epoch")
+ax.set_ylabel("Accuracy")
+
+plt.show()
+
+print(accuracy)
 
 print("ran model")
 
-predicted_classes = model.predict_classes([X_test, X_test])
+exit()
+
+#predicted_classes = model.predict_classes([X_test, X_test])
 
 
 model.save_weights("model.h5")
 print("Saved model to disk")
- 
+
 
 confusion_matrix = pd.crosstab(Y_copy, predicted_classes, rownames=['Actual'], colnames=['Predicted'])
 
